@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Exec=/bin/sh -c /home/step305/pyFaceRec_jetson_nano/start_Door.sh
+Hidden=false
+X-GNOME-Autostart-enabled=true
+Name=Door
+Comment=

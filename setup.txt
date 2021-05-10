@@ -1,0 +1,360 @@
+# 1. download image (JetPack 4.5.1) from https://developer.nvidia.com/jetson-nano-sd-card-image
+# or from https://developer.nvidia.com/embedded/downloads
+#
+# 2. flash image on SD card using instructions at
+# https://developer.nvidia.com/embedded/learn/get-started-jetson-nano-devkit#write
+#
+# 3. setup Jetson Nano
+# connect through ssh to Jetson Nano (or run right on Jetson Nano terminal)
+# next commands should be executed directly on Jetson Nano
+#
+# create Downloads catalog
+cd ~
+mkdir Downloads
+
+# install python3 pip
+sudo apt install python3-pip
+
+# install jetson-stats (jtop)
+sudo -H pip3 install -U jetson-stats
+
+# create swap file (size=4Gb)
+sudo fallocate -l 4G /var/swapfile
+sudo chmod 600 /var/swapfile
+sudo mkswap /var/swapfile
+sudo swapon /var/swapfile
+sudo bash -c 'echo "/var/swapfile swap swap defaults 0 0" >> /etc/fstab'
+
+# reboot to apply changes
+sudo reboot now
+
+# install prerequisites for OpenCV
+sudo sh -c "echo '/usr/local/cuda/lib64' >> /etc/ld.so.conf.d/nvidia-tegra.conf"
+sudo ldconfig
+sudo apt-get install build-essential cmake git unzip pkg-config
+sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get install build-essential cmake git unzip pkg-config
+sudo apt-get install libjpeg-dev libpng-dev libtiff-dev
+sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get install libgtk2.0-dev libcanberra-gtk*
+sudo apt-get install python3-dev python3-numpy
+sudo apt-get install libxvidcore-dev libx264-dev libgtk-3-dev
+sudo apt-get install libtbb2 libtbb-dev libdc1394-22-dev
+sudo apt-get install libv4l-dev v4l-utils
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+sudo apt-get install libavresample-dev libvorbis-dev libxine2-dev
+sudo apt-get install libfaac-dev libmp3lame-dev libtheora-dev
+sudo apt-get install libopencore-amrnb-dev libopencore-amrwb-dev
+sudo apt-get install libopenblas-dev libatlas-base-dev libblas-dev
+sudo apt-get install liblapack-dev libeigen3-dev gfortran
+sudo apt-get install libhdf5-dev protobuf-compiler
+sudo apt-get install libprotobuf-dev libgoogle-glog-dev libgflags-dev
+
+# download OpenCV v4.5.1
+cd ~
+wget -O opencv.zip https://github.com/opencv/opencv/archive/4.5.1.zip
+wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.5.1.zip
+
+# extract downloaded files
+unzip opencv.zip
+unzip opencv_contrib.zip
+
+# move downloaded source files for OpenCV and remove archives
+mv opencv-4.5.1 opencv
+mv opencv_contrib-4.5.1 opencv_contrib
+rm opencv.zip
+rm opencv_contrib.zip
+
+# configure OpenCV
+cd ~/opencv
+mkdir build
+cd build
+cmake \
+-D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=/usr \
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+-D EIGEN_INCLUDE_PATH=/usr/include/eigen3 \
+-D WITH_OPENCL=OFF \
+-D WITH_CUDA=ON \
+-D CUDA_ARCH_BIN=5.3 \
+-D CUDA_ARCH_PTX="" \
+-D WITH_CUDNN=ON \
+-D WITH_CUBLAS=ON \
+-D ENABLE_FAST_MATH=ON \
+-D CUDA_FAST_MATH=ON \
+-D OPENCV_DNN_CUDA=ON \
+-D ENABLE_NEON=ON \
+-D WITH_QT=OFF \
+-D WITH_OPENMP=ON \
+-D WITH_OPENGL=ON \
+-D BUILD_TIFF=ON \
+-D WITH_FFMPEG=ON \
+-D WITH_GSTREAMER=ON \
+-D WITH_TBB=ON \
+-D BUILD_TBB=ON \
+-D BUILD_TESTS=OFF \
+-D WITH_EIGEN=ON \
+-D WITH_V4L=ON \
+-D WITH_LIBV4L=ON \
+-D OPENCV_ENABLE_NONFREE=ON \
+-D INSTALL_C_EXAMPLES=ON \
+-D INSTALL_PYTHON_EXAMPLES=ON \
+-D BUILD_NEW_PYTHON_SUPPORT=ON \
+-D BUILD_opencv_python3=TRUE \
+-D OPENCV_GENERATE_PKGCONFIG=ON \
+-D BUILD_EXAMPLES=ON ..
+
+# build OpenCV
+make -j4
+sudo rm -r /usr/include/opencv4/opencv2
+cd ~/opencv/build
+
+# install OpenCV ...
+sudo make install
+
+# and clean project
+make clean
+
+# update system
+sudo apt-get update
+
+# remove sources of OpenCV
+cd ~
+sudo rm -rf ~/opencv
+sudo rm -rf ~/opencv_contrib
+
+# install prerequisites for DLIB install
+cd ~
+sudo apt-get install cmake
+sudo apt-get install sed
+
+# download DLIB 19.22 and extract
+wget http://dlib.net/files/dlib-19.22.tar.bz2
+tar xvf dlib-19.22.tar.bz2
+
+# apply patch to DLIB for Jetson Nano
+cd dlib-19.22/
+sed -i 's,forward_algo = forward_best_algo;,//forward_algo = forward_best_algo;,g' dlib/cuda/cudnn_dlibapi.cpp
+
+# configure DLIB
+mkdir build
+cd build
+
+cmake .. \
+-DDLIB_USE_CUDA=1 \
+-DUSE_AVX_INSTRUCTIONS=1
+
+# build DLIB
+cmake --build .
+
+# install DLIB
+cd ..
+sudo python3 setup.py install
+
+# remove sources of DLIB
+sudo rm -rf dlib-19.22
+rm dlib-19.22.tar.bz2
+
+sudo reboot now
+
+# install face_recognition library
+sudo pip3 install face_recognition
+
+# install Cython
+sudo pip3 install Cython
+
+# install prerequisites for pyCUDA
+sudo apt-get install libboost-all-dev
+sudo apt-get install build-essential python-dev python-setuptools libboost-python-dev libboost-thread-dev
+
+# download pyCUDA from https://pypi.org/project/pycuda/#files
+wget https://files.pythonhosted.org/packages/5a/56/4682a5118a234d15aa1c8768a528aac4858c7b04d2674e18d586d3dfda04/pycuda-2021.1.tar.gz
+# and extract
+tar xzvf pycuda-2021.1.tar.gz
+# remove archive
+rm pycuda-2021.1.tar.gz
+
+# install nano text editor
+sudo apt-get install nano
+
+# configure pyCUDA
+cd pycuda-2021.1
+export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+./configure.py
+
+# build pyCUDA
+make -j4
+
+# install pyCUDA
+sudo python3 setup.py install
+sudo pip3 install .
+
+# remove sources of pyCUDA
+cd ~
+sudo rm -rf pycuda-2021.1
+
+# download LLVM sources
+wget https://github.com/llvm/llvm-project/releases/download/llvmorg-9.0.1/llvm-9.0.1.src.tar.xz
+# and extract
+tar -xvf llvm-9.0.1.src.tar.xz
+# remove archive
+rm llvm-9.0.1.src.tar.xz
+
+# configure LLVM
+cd llvm-9.0.1.src
+mkdir llvm_build_dir
+cd llvm_build_dir/
+
+cmake ../ \
+-DCMAKE_BUILD_TYPE=Release \
+-DLLVM_TARGETS_TO_BUILD="ARM;X86;AArch64"
+
+# build LLVM
+make -j4
+
+# install LLVM
+sudo make install
+cd bin/
+echo "export LLVM_CONFIG=\""`pwd`"/llvm-config\"" >> ~/.bashrc
+echo "alias llvm='"`pwd`"/llvm-lit'" >> ~/.bashrc
+source ~/.bashrc
+sudo pip3 install llvmlite
+cd ~/Downloads
+git clone https://github.com/wjakob/tbb.git
+cd tbb/build
+cmake ..
+make -j4
+sudo make install
+
+# install NUMBA
+sudo pip3 install numba
+
+#wget https://github.com/jjhelmus/conda4aarch64/releases/download/1.0.0/c4aarch64_installer-1.0.0-Linux-aarch64.sh
+#sudo chmod +x c4aarch64_installer-1.0.0-Linux-aarch64.sh
+#sudo ./c4aarch64_installer-1.0.0-Linux-aarch64.sh
+#source ~/.bashrc
+#conda config --add channels c4aarch64
+#conda config --add channels conda-forge
+#conda install -c numba numba
+
+sudo reboot now
+
+sudo pip3 install --upgrade scipy
+
+# update
+sudo apt-get update
+
+# install prerequisites for scikit-learn
+sudo apt-get install -y build-essential gfortran libatlas-base-dev
+
+# install scikit-learn
+sudo pip3 install numpy cython sklearn
+
+# install ONNX
+sudo pip3 install onnx
+
+# install Protobuf
+sudo pip3 install protobuf
+sudo apt-get install protobuf-compiler libprotoc-dev
+
+# install KERAS prerequisites
+sudo apt-get install libhdf5-serial-dev hdf5-tools libhdf5-dev
+sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
+sudo apt-get install subversion
+sudo ln -s /usr/include/locale.h /usr/include/xlocale.h
+sudo apt-get install libhdf5-serial-dev
+
+# install KERAS
+sudo pip3 install keras
+
+# install TensorFlow prerequisites
+sudo apt-get install libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev
+sudo apt-get install liblapack-dev libblas-dev gfortran
+sudo pip3 install -U pip testresources setuptools==49.6.0
+
+sudo pip3 install -U numpy future==0.18.2 mock==3.0.5 h5py==2.10.0 \
+keras_preprocessing==1.1.1 keras_applications==1.0.8 gast==0.2.2 futures protobuf pybind11
+
+# install TensorFlow
+sudo pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v45 'tensorflow<2'
+
+# Google Coral USB install
+echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list
+
+sudo apt-get install curl
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install libedgetpu1-std
+
+# install bmon
+sudo apt-get install bmon
+
+# install pyCoral
+sudo apt-get install python3-pycoral
+
+# install missing dependencies for TensorFlow
+sudo pip3 install astor
+
+# install Pillow
+sudo pip3 install Pillow
+
+# install PyTorch
+wget https://nvidia.box.com/shared/static/p57jwntv436lfrd78inwl7iml6p13fzh.whl -O torch-1.8.0-cp36-cp36m-linux_aarch64.whl
+sudo apt-get install libopenblas-base libopenmpi-dev
+pip3 install torch-1.8.0-cp36-cp36m-linux_aarch64.whl
+rm torch-1.8.0-cp36-cp36m-linux_aarch64.whl
+
+# install RTSP server
+sudo apt-get install libgstrtspserver-1.0-dev
+git clone https://github.com/step305/RaspberryRTSPserver.git
+cp RaspberryRTSPserver/RTSPserver.c RTSPserver.c
+
+echo "gcc -o RTSPserver  RTSPserver.c  `pkg-config --cflags --libs gstreamer-rtsp-server-1.0`" > compileRTSPserver.sh
+chmod +x compileRTSPserver.sh
+./compileRTSPserver.sh
+
+rm -rf RaspberryRTSPserver
+
+sudo reboot now
+
+# test Coral
+mkdir coral && cd coral
+git clone https://github.com/google-coral/pycoral.git
+cd pycoral
+bash examples/install_requirements.sh classify_image.py
+
+python3 examples/classify_image.py \
+--model test_data/mobilenet_v2_1.0_224_inat_bird_quant_edgetpu.tflite \
+--labels test_data/inat_bird_labels.txt \
+--input test_data/parrot.jpg
+
+cd ~
+
+# install Jetson.GPIO
+sudo pip3 install Jetson.GPIO
+
+# install pySerial
+sudo pip3 install pyserial
+
+# add user to dialout group, so no sudo required to use pySerial
+sudo usermod -a -G dialout $USER
+
+# add user to group gpio , so no sudo required to use GPIO
+sudo groupadd -f -r gpio
+sudo usermod -a -G gpio $USER
+# set permissions
+git clone https://github.com/NVIDIA/jetson-gpio.git
+sudo cp jetson-gpio/lib/python/Jetson/GPIO/99-gpio.rules /etc/udev/rules.d/
+rm -rf jetson-gpio
+
+# disable auto-updates
+sudo rm /etc/cron.daily/update-notifier-common
+sudo rm /etc/cron.weekly/update-notifier-common
+sudo sed -i 's,APT::Periodic::Update-Package-Lists "1";,APT::Periodic::Update-Package-Lists "0";,g' /etc/apt/apt.conf.d/10periodic
+
+# remove crash reports
+sudo rm /var/crash/*
+
+
+
