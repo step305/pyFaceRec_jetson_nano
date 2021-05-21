@@ -7,7 +7,7 @@ import Jetson.GPIO as GPIO
 
 
 def door_relay(relay_id, state):
-    if (relay_id > 1) & (relay_id < 5):
+    if (relay_id > 0) & (relay_id < 5):
         if state == 'on':
             GPIO.output(GPIO_RELAY_PINS[relay_id-1], GPIO.HIGH)
         elif state == 'off':

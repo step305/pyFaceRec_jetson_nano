@@ -148,7 +148,7 @@ def recognition_thread(frame_buffer, person_id_queue, led1_event, led2_event, st
 
             face_encodings = face_recognition.face_encodings(rgb_small_rgb, known_face_locations=found_real_faces)
             closest_distances = face_encodings_database.kneighbors(face_encodings, n_neighbors=1)
-            are_matches = [closest_distances[0][i][0] <= 0.5 for i in range(len(found_real_faces))]
+            are_matches = [closest_distances[0][i][0] <= FACE_RECOGNITION_ALLOWED_DISTANCE for i in range(len(found_real_faces))]
 
             for predicted_user, face_location, found in \
                     zip(face_encodings_database.predict(face_encodings), found_real_faces, are_matches):

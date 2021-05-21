@@ -5,6 +5,7 @@ from pycoral.utils.edgetpu import make_interpreter
 from pycoral.utils.edgetpu import run_inference
 import face_recognition
 import os
+from parameters import *
 
 
 def calc_face_embeddings(cv2_im_rgb, faces):
@@ -29,7 +30,7 @@ class FaceDetector:
         self.face_model = os.path.join(os.path.dirname(__file__),
                                        'models/mobilenet_ssd_v2_face_quant_postprocess_edgetpu.tflite')
         self.max_faces = 10
-        self.threshold = 0.1
+        self.threshold = FACE_DETECTOR_THRESHOLD
         self.interpreter = make_interpreter(self.face_model)
         self.interpreter.allocate_tensors()
         self.inference_size = input_size(self.interpreter)

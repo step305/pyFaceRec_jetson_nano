@@ -76,7 +76,6 @@ def cam_thread(door_id, frame_buffer, led_event, stop):
     final_w = DISPLAY_SIZE[0]
     final_h = DISPLAY_SIZE[1]
     final_frame_cam_frame_x0 = 0
-    final_frame_delta_minus = 43
     black_frame = np.zeros((final_h, final_h, 3), np.uint8)
     final_frame = np.zeros((final_h, final_w, 3), np.uint8)
     aspect_x = ASPECT_RATIO[0]
@@ -93,10 +92,10 @@ def cam_thread(door_id, frame_buffer, led_event, stop):
 
     if SHOW_ON_DISPLAY:
         os.system('xrandr -o normal')
-        os.system('v4l2-ctl -d 0 -c zoom_absolute=160')
-        os.system('v4l2-ctl -d 0 -c pan_absolute=0')
-        os.system('v4l2-ctl -d 0 -c tilt_absolute=0')
-        os.system('v4l2-ctl -d 0 -c brightness=140')
+        os.system('v4l2-ctl -d {} -c zoom_absolute=160'.format(USB_CAM_NUM))
+        os.system('v4l2-ctl -d {} -c pan_absolute=0'.format(USB_CAM_NUM))
+        os.system('v4l2-ctl -d {} -c tilt_absolute=0'.format(USB_CAM_NUM))
+        os.system('v4l2-ctl -d {} -c brightness=140'.format(USB_CAM_NUM))
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
@@ -139,8 +138,8 @@ def cam_thread(door_id, frame_buffer, led_event, stop):
         rot_frame = cv2.flip(rot_frame, 1)
         rot_frame = transform_frame(rot_frame, black_frame)
         final_frame[0:final_h,
-                    final_frame_cam_frame_x0:final_frame_cam_frame_x0 + final_h - final_frame_delta_minus] = \
-            rot_frame[:, final_frame_delta_minus:]
+                    final_frame_cam_frame_x0:final_frame_cam_frame_x0 + final_h - FINAL_FRAME_DELTA_MINUS] = \
+            rot_frame[:, FINAL_FRAME_DELTA_MINUS:]
 
         final_frame = cv2.bitwise_and(final_frame, final_frame, mask=mask)
         final_frame = cv2.bitwise_or(final_frame, Logo)
