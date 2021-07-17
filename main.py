@@ -6,6 +6,7 @@ from parameters import *
 import video
 import door_management
 import faces_management
+import temper_check
 
 
 if __name__ == '__main__':
@@ -22,9 +23,10 @@ if __name__ == '__main__':
 
     frame_buffer = multiprocessing.Manager().Queue(1)
     person_id_queue = multiprocessing.Manager().Queue(1)
+    temper_queue = multiprocessing.Manager().Queue(1)
 
     camera_process = Process(target=video.cam_thread,
-                             args=(0, frame_buffer, led3_event, stop_event), daemon=True)
+                             args=(0, frame_buffer, led3_event, temper_queue, stop_event), daemon=True)
     camera_process.start()
 
     recognition_process = Process(target=faces_management.recognition_thread,
@@ -36,6 +38,10 @@ if __name__ == '__main__':
                                 args=(person_id_queue, led1_event, led2_event, led3_event, stop_event), daemon=True)
     door_lock_process.start()
 
+    temper_sensor_process = Process(target=temper_check.temper_check,
+                                    args=(temper_queue, stop_event), daemon=True)
+    temper_sensor_process.start()
+
     while True:
         try:
             if stop_event.is_set():
@@ -44,6 +50,7 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             stop_event.set()
 
+    temper_sensor_process.terminate()
     camera_process.terminate()
     recognition_process.terminate()
     sleep(DOOR_SLEEP_TIME)

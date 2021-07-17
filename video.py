@@ -22,7 +22,7 @@ def transform_frame(temp_image, empty_frame):
     return transformed_image
 
 
-def cam_thread(door_id, frame_buffer, led_event, stop):
+def cam_thread(door_id, frame_buffer, led_event, temper_queue, stop):
     door_stream_port = DOOR_STREAM_PORTS[door_id]
     door_rtsp_port = DOOR_RTSP_PORTS[door_id]
     window_name = 'FaceRec'
@@ -104,6 +104,9 @@ def cam_thread(door_id, frame_buffer, led_event, stop):
     skip_frames = SKIP_FRAMES_MAX
     time2screen_off = time.time()
     saver_frame_counter = 0
+    temper_str = ''
+    temper_str_color = (0, 255, 0)
+    temper_str_expire = time.time()
 
     while True:
         ret, frame = cam.read()
@@ -133,6 +136,19 @@ def cam_thread(door_id, frame_buffer, led_event, stop):
                 screen_saver.set(cv2.CAP_PROP_POS_FRAMES, 0)
             time.sleep(1.0 / 50.0)
             frame = frame_saver
+
+        if not temper_queue.empty():
+            (ta, to1) = temper_queue.get()
+            temper_str = 'TA = {:0.1f}: To = {"0.1f}'.format(ta, to1)
+            if to1 < 37:
+                temper_str_color = (0, 255, 0)
+            else:
+                temper_str_color = (0, 0, 255)
+            temper_str_expire = time.time() + ACTIVE_REMAIN_TIME
+        if temper_str_expire > time.time():
+            frame = cv2.putText(final_frame, temper_str, (50, 600), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                color=temper_str_color,
+                                thickness=2)
 
         rot_frame = cv2.resize(frame, (cam_resize_x, cam_resize_y))
         rot_frame = cv2.flip(rot_frame, 1)
