@@ -18,8 +18,6 @@ def door_lock_thread(person_id, led1_event, led2_event, disp_off_event, stop):
     if USE_WIEGAND:
         wiegand_port = serial.Serial(port='/dev/ttyACM0', baudrate=9600)
 
-    snd_allowed = ('gst-launch-1.0 filesrc location=media/allowed.ogg ! oggdemux ! '
-                   'vorbisdec ! audioconvert ! audioresample ! pulsesink &')
 
     GPIO.setmode(GPIO.BCM)
     for pin in GPIO_RELAY_PINS:
@@ -94,8 +92,6 @@ def door_lock_thread(person_id, led1_event, led2_event, disp_off_event, stop):
                 door_relay(1, 'on')
                 print('Unlocked for {}'.format(user_name))
 
-                os.system(snd_allowed)
-                time.sleep(1)
 
                 if USE_WIEGAND:
                     str_cmd = "$2: card=0 :command=3\n"
