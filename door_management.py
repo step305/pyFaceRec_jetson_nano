@@ -62,9 +62,12 @@ def gstreamer_pipeline(
 print("[정보] 정답지(encodings.pickle)를 불러오는 중...")
 data = pickle.loads(open("encodings.pickle", "rb").read())
 
+<<<<<<< HEAD
 print("[정보] 젯슨 카메라(GStreamer)를 켭니다...")
 # cap = cv2.VideoCapture(0) # (윈도우 방식 - 느림)
 cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER) # (젯슨 방식 - 빠름)
+=======
+>>>>>>> f905872e1dea99b4f61ac8cb19f652fbe3065521
 
 if not cap.isOpened():
     print("[오류] 젯슨 카메라를 켤 수 없습니다.")
@@ -140,10 +143,13 @@ while True:
         if access_granted and name != "Unknown":
             color = (255, 0, 0) # 방금 인증됐으면 파란색
 
+<<<<<<< HEAD
         cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
         y = top - 15 if top - 15 > 15 else top + 15
         cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
                     0.75, color, 2)
+=======
+>>>>>>> f905872e1dea99b4f61ac8cb19f652fbe3065521
 
     cv2.imshow("Door Management System (Jetson)", frame)
 
