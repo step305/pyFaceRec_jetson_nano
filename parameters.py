@@ -1,7 +1,4 @@
-
 # video parameters
-DOOR_STREAM_PORTS = (5000,)
-DOOR_RTSP_PORTS = (8000,)
 SKIP_FRAMES_MAX = 2
 USB_CAM_NUM = 1
 USB_CAMERA = '/dev/video{}'.format(USB_CAM_NUM)
@@ -18,15 +15,15 @@ SHOW_ON_DISPLAY = True
 FINAL_FRAME_DELTA_MINUS = 86
 
 # door management parameters
-USE_WIEGAND = False
-SEND_CARD_ID = False
+# USE_WIEGAND = False  # 제거
+# SEND_CARD_ID = False # 제거
 LEDON_REMAIN_TIME = 3
-GPIO_RELAY_PINS = (5, 19, 13, 6)  # # relay id = 1, 2, 3, 4
+GPIO_RELAY_PINS = (5, 19, 13, 6)  # # relay id = 1, 2, 3, 4 (도어 및 LED 핀)
 DOOR_SLEEP_TIME = 5
 LOG_DOOR_EVENTS = False
 
 # recognition parameters
-LIVENESS_TEST = False
+LIVENESS_TEST = False # 간단한 구현을 위해 False 유지
 FACES_SAVE_INTERVAL = 6
 LOG_UNKNOWN_FACES = False
 LOG_KNOWN_USERS = False
@@ -34,6 +31,3 @@ ROBUST_SEEN_TIMES = 4
 ROBUST_SEEN_INTERVAL = 2
 FACE_DETECTOR_THRESHOLD = 0.2
 FACE_RECOGNITION_ALLOWED_DISTANCE = 0.5
-
-# temperature sensor parameters
-TEMPER_SENSOR_SERIAL_DEV = '/dev/ttyACM0'
